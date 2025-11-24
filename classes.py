@@ -57,11 +57,16 @@ class  Usuario:
 
 
 class Colecao:
-  """
-  a colecao será todos os jogos que o usuário cadastrou em seu perfil, a partir dessa coleção o usuário poderá
-  criar listas personalizadas baseadas no seu filtro, como "jogos terror", "jogos zerados" e afins
-  """
-  pass
+  def __init__(self):
+    self.lista = []
+
+  def adicionar_jogos(self, jogo_recebido):
+    for jogo_existente in self.lista:
+      if jogo_recebido == jogo_existente:
+        return "Esse jogo já está na coleção!"
+    self.lista.append(jogo_recebido)
+    return "Jogo adicionado com sucesso!"
+  
 
 class Relatorio:
   """
