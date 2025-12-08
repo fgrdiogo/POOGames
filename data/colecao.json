@@ -3,7 +3,21 @@
         "titulo": "sim",
         "genero": "rpg",
         "plataforma": "pc",
-        "status": "ok",
-        "horas": 10
+        "status": "FINALIZADO",
+        "horas": 14,
+        "avaliacoes": [
+            {
+                "nota": 9,
+                "favoritado": true,
+                "jogo_titulo": "sim",
+                "jogo_plataforma": "pc"
+            },
+            {
+                "nota": 8,
+                "favoritado": false,
+                "jogo_titulo": "sim",
+                "jogo_plataforma": "pc"
+            }
+        ]
     }
 ]
