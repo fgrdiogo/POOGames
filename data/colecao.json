@@ -1,3 +1,11 @@
 [
-
+    {
+        "titulo": "dark souls",
+        "genero": "rpg",
+        "plataforma": "pc",
+        "status": "FINALIZADO",
+        "horas": 10,
+        "avaliacoes": [],
+        "meta_anual": null
+    }
 ]

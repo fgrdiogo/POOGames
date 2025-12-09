@@ -22,6 +22,17 @@ class Colecao:
     if plataforma:
       resultado = [j for j in resultado if j.plataforma.lower() == plataforma.lower()]
     return resultado
+  
+  def filtrar(self, genero=None, status=None, plataforma=None):
+    resultado = self.lista_de_jogos
+    if genero:
+      resultado = [j for j in resultado if j.genero.lower() == genero.lower()]
+    if status:
+      s = status.strip().upper()
+      resultado = [j for j in resultado if j.status.upper() == s]
+    if plataforma:
+      resultado = [j for j in resultado if j.plataforma.lower() == plataforma.lower()]
+    return resultado
 
   def ordenar(self, key='horas', reverse=False):
     key = key.lower()
