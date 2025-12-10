@@ -1,4 +1,5 @@
-# POOGames 🎮 [Python Logo](https://img.shields.io/badge/Python-3776AB?style=for-the-badge&logo=python&logoColor=white) 
+# POOGames 🎮  
+![Python](https://img.shields.io/badge/Python-3776AB?style=for-the-badge&logo=python&logoColor=white)
 
 ## 📄 Sobre o Projeto
 
@@ -36,8 +37,6 @@ Você pode usar o programa direto pelo terminal (CLI), registrar seus jogos, adi
 | **Relatorio_resumido / Relatorio_horas / Relatorio_media_avaliacao / Relatorio_percentual_status / Relatorio_top5** | Subclasses de `Relatorio`, cada uma implementando um tipo de relatório específico |
 | **functions.py (controle)** | Interface de linha de comando — lê entradas do usuário, interage com `Colecao`, salva e carrega JSON, invoca relatórios, etc. |
 
-Essa divisão modular facilita entender responsabilidades, estender o projeto e manter o código limpo — um exemplo prático de uso de composição + herança no design orientado a objetos.
-
 ---
 
 ## 🛠️ Como usar o projeto localmente
@@ -47,14 +46,22 @@ Essa divisão modular facilita entender responsabilidades, estender o projeto e 
 - Python 3 instalado  
 - (Opcional) Criar um diretório `data/` na raiz para armazenar o JSON  
 
-### Passos
+---
 
-```bash
-git clone https://github.com/fgrdiogo/POOGames.git
-cd POOGames
-python app.py
+## 🚀 Passos para execução:
+  #1. Clone o repositório
+  git clone https://github.com/fgrdiogo/POOGames.git
+
+  #2. Entre na pasta do projeto
+  cd POOGames
+
+  #3. Execute o aplicativo
+  python app.py
 
 
+## 📁 Estrutura do Projeto
+
+```text
 POOGames/
 │  README.md
 │  app.py
@@ -68,4 +75,7 @@ POOGames/
 │
 └─ data/
      colecao.json   ← arquivo de persistência (gerado automaticamente)
-     settings.json  ← arquivo de persistência das preferências do usuário (gerado automaticamente)
+     settings.json  ← criado no primeiro uso
+
+
+
