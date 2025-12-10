@@ -2,6 +2,7 @@
 # IMPORTAÇÕES
 #--------------------------------------------------------------
 import json
+import os
 from Classes.jogo import Jogo
 from Classes.avaliacao import Avaliacao
 from Classes.colecao import Colecao
@@ -185,18 +186,38 @@ def atualizar_status(colecao):
 #--------------------------------------------------------------
 # SALVAR E CARREGAR ARQUIVOS JSON
 #--------------------------------------------------------------
+"""
+Uso de caminhos relativos com base_dir e data_path para procurar arquivos .json na máquina do usuário
+"""
+
+
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+
+DATA_PATH = os.path.join(BASE_DIR, "..", "data", "colecao.json")
+
+"""
+Caso não seja encontrado um colecao.json, o mesmo é criado
+"""
+
+os.makedirs(os.path.dirname(DATA_PATH), exist_ok=True)
+if not os.path.exists(DATA_PATH):
+    with open(DATA_PATH, "w") as f:
+        json.dump([], f)
+
+
 def salvar(colecao):
     dados = [jogo.to_dict() for jogo in colecao.lista_de_jogos]
-    with open("/home/diogo/POO/data/colecao.json", "w", encoding="utf-8") as f:
+    with open(DATA_PATH, "w", encoding="utf-8") as f:
         json.dump(dados, f, indent=4, ensure_ascii=False)
 
 def carregar():
     try:
-        with open("/home/diogo/POO/data/colecao.json", "r") as f:
-            return [Jogo.from_dict(j) for j in json.load(f)]
-    except:
-        return []
+        with open(DATA_PATH, "r", encoding="utf-8") as f:
+            lista = json.load(f)
+    except FileNotFoundError:
+        return []   # caso o json não exista ainda
 
+    return [Jogo.from_dict(jogo) for jogo in lista]
 
 #--------------------------------------------------------------
 # EXIBIÇÃO DA COLEÇÃO
@@ -261,13 +282,32 @@ def gerar_relatorio(colecao):
 #--------------------------------------------------------------
 # CONFIGURAÇÕES DO USUÁRIO (SETTINGS.JSON)
 #--------------------------------------------------------------
+"""
+Caminho do arquivo settings.json no mesmo diretório /data/
+"""
+SETTINGS_PATH = os.path.join(BASE_DIR, "..", "data", "settings.json")
+
+"""
+Garante que exista a pasta e o arquivo de settings
+"""
+os.makedirs(os.path.dirname(SETTINGS_PATH), exist_ok=True)
+if not os.path.exists(SETTINGS_PATH):
+    with open(SETTINGS_PATH, "w", encoding="utf-8") as f:
+        json.dump({
+            "meta_anual": 0,
+            "plataforma_principal": None,
+            "generos_favoritos": []
+        }, f, indent=4, ensure_ascii=False)
+
+
 def salvar_settings(settings):
-    with open("/home/diogo/POO/data/settings.json", "w", encoding="utf-8") as f:
+    with open(SETTINGS_PATH, "w", encoding="utf-8") as f:
         json.dump(settings, f, indent=4, ensure_ascii=False)
+
 
 def carregar_settings():
     try:
-        with open("/home/diogo/POO/data/settings.json", "r", encoding="utf-8") as f:
+        with open(SETTINGS_PATH, "r", encoding="utf-8") as f:
             return json.load(f)
     except FileNotFoundError:
         return {
