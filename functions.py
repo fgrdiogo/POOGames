@@ -1,8 +1,7 @@
 #--------------------------------------------------------------
 # IMPORTAÇÕES
 #--------------------------------------------------------------
-import json
-import os
+import dados
 from Classes.jogo import Jogo
 from Classes.avaliacao import Avaliacao
 from Classes.colecao import Colecao
@@ -14,16 +13,16 @@ from Classes.relatorio import (
     Relatorio_top5
 )
 
-
 #--------------------------------------------------------------
 # MENU PRINCIPAL / INICIALIZAÇÃO DO SISTEMA
 #--------------------------------------------------------------
 def inicializar():
     colecao = Colecao()
-    colecao.lista_de_jogos = carregar()
+    
+    colecao.lista_de_jogos = dados.carregar_jogos()
 
     while True:
-        print("==== POOGAMES ====")
+        print("\n==== POOGAMES ====")
         print("0 - SAIR")
         print("1 - CADASTRAR JOGO")
         print("2 - MOSTRAR RESUMO DE UM JOGO")
@@ -35,16 +34,24 @@ def inicializar():
         print("8 - ATUALIZAR STATUS")
         print("9 - EDITAR CONFIGURAÇÕES")
         print("10 - VERIFICAR ALERTAS")
-        x = int(input("ESCOLHA: "))
+        
+        try:
+            # valida que o que será digitado pelo usuário é um inteiro
+            x = int(input("ESCOLHA: "))
+        except ValueError:
+            print("Opção inválida. Digite um número.")
+            continue
 
         if x == 0: 
             break
         elif x == 1:
-            cadastrar_jogo(colecao); salvar(colecao)
+            cadastrar_jogo(colecao)
+            dados.salvar_jogos(colecao.lista_de_jogos)
         elif x == 2:
             mostrar_resumo(colecao)
         elif x == 3:
             avaliacao(colecao)
+            dados.salvar_jogos(colecao.lista_de_jogos)
         elif x == 4:
             mostrar_colecao(colecao)
         elif x == 5:
@@ -52,54 +59,74 @@ def inicializar():
         elif x == 6:
             mostrar_colecao_filtrada(colecao)
         elif x == 7:
-            atualizar_horas(colecao); salvar(colecao)
+            atualizar_horas(colecao)
+            dados.salvar_jogos(colecao.lista_de_jogos)
         elif x == 8:
-            atualizar_status(colecao); salvar(colecao)
+            atualizar_status(colecao)
+            dados.salvar_jogos(colecao.lista_de_jogos)
         elif x == 9:
             configurar_usuario()
         elif x == 10:
             avisos(colecao)
-
+        else:
+            print("Opção inexistente.")
 
 #--------------------------------------------------------------
 # FUNÇÕES - CADASTRO E INFORMAÇÕES DE JOGOS
 #--------------------------------------------------------------
 def cadastrar_jogo(colecao):
     print("==== Cadastro ====")
-    titulo = input("Título: ")
+    titulo = input("Título: ").strip()
+    if not titulo:
+        print("Erro: O título é obrigatório.")
+        return
+
+    plataforma = input("Plataforma: ").strip()
+    
+    # verifica duplicidade usando o __eq__ da classe Jogo
+    temp_jogo = Jogo(titulo, "Genérico", plataforma)
+    if temp_jogo in colecao.lista_de_jogos:
+        print("ERRO: Já existe um jogo com esse título e plataforma.")
+        return
+
     genero = input("Gênero: ")
-    plataforma = input("Plataforma: ")
-    status = input("Status: ")
+    status = input("Status (JOGANDO, FINALIZADO...): ")
 
-    if status == "JOGANDO":
-        jogando_atuais = 0
-        for jogo in colecao.lista_de_jogos:
-            if jogo.status == "JOGANDO":
-                jogando_atuais += 1
+    # validar a regra de mais de 3 jogos com status "jogando"
+    if status.upper() == "JOGANDO":
+        jogando_atuais = sum(1 for j in colecao.lista_de_jogos if j.status == "JOGANDO")
         if jogando_atuais >= 3:
-            raise ValueError("NÃO É POSSÍVEL CADASTRAR MAIS DE 3 JOGOS COM STATUS JOGANDO")
+            print("ERRO: Você já tem 3 jogos 'JOGANDO'. Finalize ou pause um antes.")
+            return
 
     try:
-        horas = int(input("Horas jogadas: "))
+        horas_input = input("Horas jogadas: ")
+        horas = int(horas_input) if horas_input else 0
     except ValueError:
-        print("Valor inválido.")
+        print("Valor de horas inválido.")
         return
 
     try:
+        # tenta criar o jogo (a classe jogo pelo encapsulamento que vai avaliar as regras)
         jogo = Jogo(titulo, genero, plataforma, status, horas)
+        
+        # adiciona na coleção
+        colecao.adicionar_jogos(jogo)
+        print("Jogo cadastrado com sucesso!")
+        
     except ValueError as e:
-        print(f"Erro: {e}")
-        return
-
-    print(colecao.adicionar_jogos(jogo))
+        print(f"Erro ao cadastrar: {e}")
 
 
 def mostrar_resumo(colecao):
     nome = input("Nome do jogo: ")
+    encontrado = False
     for jogo in colecao.lista_de_jogos:
-        if nome.lower() == jogo.titulo.lower():
-            print(jogo); return
-    print("Jogo não encontrado.")
+        if nome.lower() in jogo.titulo.lower():
+            print(jogo)
+            encontrado = True
+    if not encontrado:
+        print("Jogo não encontrado.")
 
 
 #--------------------------------------------------------------
@@ -110,22 +137,40 @@ def avaliacao(colecao):
         print("Nenhum jogo cadastrado.")
         return
     
-    titulo = input("Avaliar qual jogo? ")
+    jogos_finalizados = False
+    for jogo in colecao.lista_de_jogos:
+        if jogo.status.upper() == "FINALIZADO":
+            jogos_finalizados = True
+    
+    if jogos_finalizados == False:
+        print("Não há jogos disponíveis para avaliação")
+        return
 
     for jogo in colecao.lista_de_jogos:
+        if jogo.status.upper() == "FINALIZADO":
+            print(f"Jogo disponível para avaliação: {jogo.titulo}")
+
+    titulo = input("Avaliar qual jogo? ")
+    for jogo in colecao.lista_de_jogos:
         if jogo.titulo.lower() == titulo.lower():
+            
+            # validação rápida de status
             if jogo.status != "FINALIZADO":
-                raise ValueError("PARA AVALIAR UM JOGO É NECESSÁRIO QUE ELE ESTEJA FINALIZADO")
-            else:
-                try:
-                    nota = int(input("Nota (de 0 a 10): "))
-                    fav = input("Favorito? S/N ").upper() == "S"
-                    avali = Avaliacao(nota, jogo, fav)
-                    resultado = jogo.avaliar_jogo(avali)
-                    if resultado: print(resultado)
-                except ValueError as e:
-                    print(f"Erro: {e}")
+                print("ERRO: O jogo precisa estar FINALIZADO para ser avaliado.")
                 return
+
+            try:
+                nota = int(input("Nota (de 0 a 10): "))
+                fav = input("Favorito? S/N ").upper() == "S"
+                avali = Avaliacao(nota, jogo, fav)
+                
+                msg = jogo.avaliar_jogo(avali)
+                if msg: print(msg)
+                
+            except ValueError as e:
+                print(f"Erro: {e}")
+            return
+            
     print("Jogo não encontrado.")
 
 
@@ -133,17 +178,12 @@ def avaliacao(colecao):
 # FUNÇÕES DE ATUALIZAÇÃO (HORAS / STATUS)
 #--------------------------------------------------------------
 def atualizar_horas(colecao):
-    """
-    Localiza um jogo na coleção pelo título e (opcionalmente) plataforma.
-    Se o jogo for encontrado chama a função responsável por atualizar as horas.
-    """
     titulo = input("Título: ")
-    plataforma = input("Plataforma (opcional): ")
-
+    
+    #procura o jogo na coleção para fazer a avaliação
     for jogo in colecao.lista_de_jogos:
-        if jogo.titulo.lower() == titulo.lower() and \
-           (not plataforma or jogo.plataforma.lower() == plataforma.lower()):
-            #Jogo encontrado, então chama a função de atualizar as horas
+        if jogo.titulo.lower() == titulo.lower():
+            #se o jogo existir chama a função de atualizar as horas
             atualizar_horas_jogo(jogo)  
             return
 
@@ -151,31 +191,25 @@ def atualizar_horas(colecao):
 
 
 def atualizar_horas_jogo(jogo):
-    """
-    Atualiza o total de horas jogadas no objeto passado como parâmetro.
-    Não busca jogo, apenas modifica o que foi encontrado anteriormente.
-    """
     try:
-        horas = int(input("Adicionar horas: "))
-        if horas < 0:
-            print("Não é permitido diminuir horas.")
-            return
+        horas = int(input(f"Quantas horas adicionar ao jogo {jogo.titulo}? "))
+        # a propriedade setter .horas na classe Jogo valida se é negativo/menor
         jogo.horas += horas
-        print("Horas atualizadas com sucesso!")
-    except ValueError:
-        print("Entrada inválida. Digite um número.")
+        print(f"Horas atualizadas! Total: {jogo.horas}h")
+    except ValueError as e:
+        print(f"Erro: {e}")
 
 
 def atualizar_status(colecao):
     titulo = input("Título: ")
-    plataforma = input("Plataforma (opcional): ")
     novo_status = input("Novo status: ")
 
     for jogo in colecao.lista_de_jogos:
-        if jogo.titulo.lower() == titulo.lower() and (not plataforma or jogo.plataforma.lower() == plataforma.lower()):
+        if jogo.titulo.lower() == titulo.lower():
             try:
+                # o setter .status na classe Jogo valida se o status existe
                 jogo.status = novo_status
-                print("Status atualizado.")
+                print(f"Status atualizado para {jogo.status}.")
             except ValueError as e:
                 print(f"Erro: {e}")
             return
@@ -184,71 +218,42 @@ def atualizar_status(colecao):
 
 
 #--------------------------------------------------------------
-# SALVAR E CARREGAR ARQUIVOS JSON
-#--------------------------------------------------------------
-"""
-Uso de caminhos relativos com base_dir e data_path para procurar arquivos .json na máquina do usuário
-"""
-
-
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-
-DATA_PATH = os.path.join(BASE_DIR, "..", "data", "colecao.json")
-
-"""
-Caso não seja encontrado um colecao.json, o mesmo é criado
-"""
-
-os.makedirs(os.path.dirname(DATA_PATH), exist_ok=True)
-if not os.path.exists(DATA_PATH):
-    with open(DATA_PATH, "w") as f:
-        json.dump([], f)
-
-
-def salvar(colecao):
-    dados = [jogo.to_dict() for jogo in colecao.lista_de_jogos]
-    with open(DATA_PATH, "w", encoding="utf-8") as f:
-        json.dump(dados, f, indent=4, ensure_ascii=False)
-
-def carregar():
-    try:
-        with open(DATA_PATH, "r", encoding="utf-8") as f:
-            lista = json.load(f)
-    except FileNotFoundError:
-        return []   # caso o json não exista ainda
-
-    return [Jogo.from_dict(jogo) for jogo in lista]
-
-#--------------------------------------------------------------
 # EXIBIÇÃO DA COLEÇÃO
 #--------------------------------------------------------------
 def mostrar_colecao(colecao):
     if not colecao.lista_de_jogos:
-        print("Coleção vazia."); return
+        print("Coleção vazia.")
+        return
     
+    print("-" * 30)
     for jogo in colecao.lista_de_jogos:
         print(f"Titulo: {jogo.titulo}")
         print(f"Gênero: {jogo.genero}")
         print(f"Plataforma: {jogo.plataforma}")
         print(f"Status: {jogo.status}")
         print(f"Horas: {jogo.horas}")
-        if jogo._avaliacoes:
+        
+        # verifica se tem avaliações de forma segura
+        if hasattr(jogo, '_avaliacoes') and jogo._avaliacoes:
             media = sum(a.nota for a in jogo._avaliacoes) / len(jogo._avaliacoes)
             print(f"Média Avaliações: {media:.2f}")
         else:
             print(f"Média Avaliações: N/A")
-        print("---------------")
+        print("-" * 30)
 
 
 def mostrar_colecao_filtrada(colecao):
+    print("Deixe em branco para ignorar o filtro.")
     genero = input("Gênero: ") or None
     status = input("Status: ") or None
     plataforma = input("Plataforma: ") or None
 
     resultados = colecao.filtrar(genero=genero, status=status, plataforma=plataforma)
     if not resultados:
-        print("Nenhum jogo encontrado."); return
+        print("Nenhum jogo encontrado com esses filtros.")
+        return
 
+    print(f"\nEncontrados {len(resultados)} jogo(s):")
     for jogo in resultados:
         print(f"{jogo.titulo} | {jogo.plataforma} | {jogo.status} | {jogo.horas}h")
 
@@ -257,14 +262,20 @@ def mostrar_colecao_filtrada(colecao):
 # RELATÓRIOS
 #--------------------------------------------------------------
 def gerar_relatorio(colecao):
-    print("QUAL TIPO DE RELATÓRIO VOCÊ DESEJA GERAR?")
+    print("\nQUAL TIPO DE RELATÓRIO VOCÊ DESEJA GERAR?")
     print("1-RELATÓRIO RESUMIDO")
     print("2-RELATORIO DE HORAS")
     print("3-RELATORIO MÉDIA DE AVALIAÇÕES")
     print("4-RELATORIO PERCENTUAL DE JOGOS POR STATUS")
     print("5-TOP 5 JOGOS MAIS JOGADOS")
-    x = int(input("Digite a sua opção: "))
+    
+    try:
+        x = int(input("Digite a sua opção: "))
+    except ValueError:
+        print("Opção inválida.")
+        return
 
+    #opções de relatório filtrados
     if x == 1: 
        Relatorio_resumido(colecao).gerar()
     elif x == 2:
@@ -280,44 +291,11 @@ def gerar_relatorio(colecao):
 
 
 #--------------------------------------------------------------
-# CONFIGURAÇÕES DO USUÁRIO (SETTINGS.JSON)
+# CONFIGURAÇÕES DE USUÁRIO
 #--------------------------------------------------------------
-"""
-Caminho do arquivo settings.json no mesmo diretório /data/
-"""
-SETTINGS_PATH = os.path.join(BASE_DIR, "..", "data", "settings.json")
-
-"""
-Garante que exista a pasta e o arquivo de settings
-"""
-os.makedirs(os.path.dirname(SETTINGS_PATH), exist_ok=True)
-if not os.path.exists(SETTINGS_PATH):
-    with open(SETTINGS_PATH, "w", encoding="utf-8") as f:
-        json.dump({
-            "meta_anual": 0,
-            "plataforma_principal": None,
-            "generos_favoritos": []
-        }, f, indent=4, ensure_ascii=False)
-
-
-def salvar_settings(settings):
-    with open(SETTINGS_PATH, "w", encoding="utf-8") as f:
-        json.dump(settings, f, indent=4, ensure_ascii=False)
-
-
-def carregar_settings():
-    try:
-        with open(SETTINGS_PATH, "r", encoding="utf-8") as f:
-            return json.load(f)
-    except FileNotFoundError:
-        return {
-            "meta_anual": 0,
-            "plataforma_principal": None,
-            "generos_favoritos": []
-        }
-
 def configurar_usuario():
-    settings = carregar_settings()
+    # Usa o módulo dados para carregar
+    settings = dados.carregar_settings()
 
     while True:
         print("\n====== CONFIGURAÇÕES DO SISTEMA ======")
@@ -326,11 +304,12 @@ def configurar_usuario():
         print(f"3 - Adicionar gênero favorito")
         print(f"4 - Remover gênero favorito")
         print("5 - Ver configurações atuais")
-        print("0 - Voltar ao menu principal")
+        print("0 - Voltar e Salvar")
         opc = input("Escolha: ")
 
         if opc == "0":
-            salvar_settings(settings)
+            # Usa o módulo dados para salvar
+            dados.salvar_settings(settings)
             print("Configurações salvas com sucesso.")
             break
 
@@ -342,7 +321,7 @@ def configurar_usuario():
                     print("Meta anual atualizada!")
                 else:
                     print("A meta não pode ser negativa.")
-            except:
+            except ValueError:
                 print("Digite um número válido.")
 
         elif opc == "2":
@@ -373,29 +352,32 @@ def configurar_usuario():
             print(f"Gêneros favoritos: {', '.join(settings['generos_favoritos']) if settings['generos_favoritos'] else 'Nenhum'}")
 
         else:
-            print("Opção inválida. Tente novamente.")
+            print("Opção inválida.")
 
 
 #--------------------------------------------------------------
 # ALERTAS / AVISOS
 #--------------------------------------------------------------
 def avisos(colecao):
-    """
-    Nesse módulo o usuário poderá ver seus avisos e alertas, 
-    """
-    settings = carregar_settings()
-    print("AVISOS E ALERTAS:")
+    settings = dados.carregar_settings()
+    meta_anual = settings.get('meta_anual', 0)
 
-    meta_atual = 0
-    for jogo in colecao.lista_de_jogos:
-        if jogo.status == "FINALIZADO":
-            meta_atual += 1
+    print("\n==== AVISOS E ALERTAS ====")
 
-    if meta_atual < settings['meta_anual']:
-        print("A META ATUAL DE JOGOS É MENOR QUE A META ANUAL!")
-
+    #Se a meta anual não tiver definida ou não houver jogos
+    if meta_anual == 0:
+        print("Nenhuma meta anual definida. Vá em 'Configurações' para definir uma.")
     else:
-        print("VOCÊ ULTRAPASSOU A META ANUAL PARABÉNS!")
-    
+        meta_atual = 0
+        for jogo in colecao.lista_de_jogos:
+            if jogo.status == "FINALIZADO":
+                meta_atual += 1
+
+        if meta_atual < meta_anual:
+            falta = meta_anual - meta_atual
+            print(f"Você finalizou {meta_atual} jogos. Faltam {falta} para a meta de {meta_anual}!")
+        else:
+            print(f"✅ PARABÉNS! Você atingiu a meta anual ({meta_atual}/{meta_anual})!")
+    #if not averigua se a lista_de_jogos é vazia, se ela for avisa que não há jogos
     if not colecao.lista_de_jogos: 
-        print("VOCÊ NÃO POSSUI AVISOS NEM JOGOS CADASTRADOS")
+        print("DICA: Sua coleção está vazia. Cadastre alguns jogos!")

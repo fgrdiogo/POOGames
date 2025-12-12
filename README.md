@@ -48,16 +48,24 @@ Você pode usar o programa direto pelo terminal (CLI), registrar seus jogos, adi
 
 ---
 
-## 🚀 Passos para execução:
-  #1. Clone o repositório
-  git clone https://github.com/fgrdiogo/POOGames.git
+## ​💻​ Como Executar
 
-  #2. Entre na pasta do projeto
-  cd POOGames
+1. Clone este repositório:
 
-  #3. Execute o aplicativo
-  python app.py
+   ```bash
+   git clone https://github.com/fgrdiogo/POOGames.git
+   ```
 
+2. Entre na pasta do projeto
+
+   ```bash
+   cd POOGames
+   ```
+ 
+3. Execute o aplicativo
+    ```bash
+     python app.py
+    ```
 
 ## 📁 Estrutura do Projeto
 
@@ -66,6 +74,7 @@ POOGames/
 │  README.md
 │  app.py
 │  functions.py
+|  dados.py
 │
 ├─ Classes/
 │    jogo.py
@@ -76,6 +85,4 @@ POOGames/
 └─ data/
      colecao.json   ← arquivo de persistência (gerado automaticamente)
      settings.json  ← criado no primeiro uso
-
-
-
+```
