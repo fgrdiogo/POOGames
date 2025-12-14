@@ -5,10 +5,20 @@ class Colecao:
         self.lista_de_jogos = []
 
     def adicionar_jogos(self, jogo_recebido):
-        # Verifica se já existe usando o __eq__ do Jogo
+        # Verifica se já existe usando o __eq__ do Jogo    
         if jogo_recebido in self.lista_de_jogos:
             raise ValueError("Esse jogo já está na coleção!")
         
+        #caso o jogo recebido tenha status jogando o programa verifica na coleção se é possível adiciona-ló sem passar o limite
+        if jogo_recebido.status.upper() == "JOGANDO":
+            jogando_atuais = 0
+
+            for jogo in self.lista_de_jogos:
+                if jogo.status.upper() == "JOGANDO":
+                        jogando_atuais += 1
+        
+            if jogando_atuais >= 3:
+                raise ValueError("Impossível ter mais de 3 jogos com status JOGANDO")
         self.lista_de_jogos.append(jogo_recebido)
         return True
 
