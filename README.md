@@ -166,5 +166,4 @@ POOGames/
 └─ testes/           ← Testes Unitários
      __init__.py     ← define o pacote de testes
      test_jogo.py    ← bateria de testes da classe Jogo
-← ponto de entrada principal
 ```
